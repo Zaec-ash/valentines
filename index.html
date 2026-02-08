@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💛 Legendary Choice</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #ffcb05, #ff6f61);
+      font-family: 'Press Start 2P', cursive;
+      text-align: center;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    /* CRITICAL FIX: The Dialogue Box now has the highest Z-index */
+    .quote {
+      width: 100%;
+      max-width: 650px;
+      padding: 30px;
+      background: white;
+      border: 6px solid #3b4cca;
+      border-radius: 20px;
+      box-shadow: 0 10px 0px rgba(0,0,0,0.2);
+      font-size: clamp(0.7rem, 2.5vw, 0.9rem);
+      color: #3b4cca;
+      line-height: 1.8;
+      min-height: 180px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1000; /* Always on top of the growing image */
+      pointer-events: auto;
+    }
+
+    .choices-grid {
+      display: none;
+      gap: 20px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      width: 100%;
+      position: relative;
+      z-index: 10; /* Lower than the quote box */
+    }
+
+    .poke-card {
+      background: white;
+      border: 5px solid #3b4cca;
+      border-radius: 15px;
+      padding: 12px;
+      cursor: pointer;
+      transition: transform 0.3s ease-in-out;
+      width: 160px;
+      position: relative;
+    }
+
+    /* Option 9 grows but stays behind the text box */
+    #choice-9 {
+      z-index: 500; 
+      transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .poke-card img {
+      width: 100%;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+
+    .poke-name { font-size: 0.6rem; margin-top: 10px; color: #333; text-transform: uppercase; }
+
+    .btn-container {
+      display: none;
+      gap: 20px;
+      margin-top: 25px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .play-btn, .yes-btn, .no-btn {
+      padding: 15px 30px;
+      font-family: 'Press Start 2P';
+      font-size: 0.9rem;
+      cursor: pointer;
+      border-radius: 10px;
+      border: none;
+    }
+
+    .play-btn { background: #3b4cca; color: white; box-shadow: 0 6px #2a3792; }
+    .yes-btn { background: #4caf50; color: white; box-shadow: 0 6px #2e7d32; }
+    .no-btn { background: #f44336; color: white; box-shadow: 0 6px #c62828; z-index: 2000; }
+
+    #final-partner-img {
+      width: 180px;
+      height: 180px;
+      margin-bottom: 20px;
+      border-radius: 20px;
+      border: 6px solid #3b4cca;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div id="text-box" class="quote">
+      <div id="final-partner-container"></div>
+      <div id="display-text">“Every love story is special, but ours could be legendary.”</div>
+      
+      <div id="final-choice-btns" class="btn-container">
+        <button class="yes-btn" onclick="celebrate()">YES</button>
+        <button id="no-button" class="no-btn" onmouseover="moveNoButton()" onclick="moveNoButton()">NO</button>
+      </div>
+    </div>
+
+    <button id="start-btn" class="play-btn" onclick="startAdventure()">▶ PLAY</button>
+    <div id="choices-container" class="choices-grid"></div>
+  </div>
+
+  <script>
+    let round = 0;
+    const maxRounds = 3;
+    let wrongTries = 0;
+    let option9Scale = 1.0;
+
+    const wrongMessages = [
+        "Wait... are you sure? ❤️",
+        "I think you missed the best one! 🤨",
+        "I'm starting to get huge! 🥺",
+        "Seriously? Choose me! 😤",
+        "I'm covering the screen! 😂",
+        "YOU CANNOT ESCAPE THIS LOVE! 👹"
+    ];
+
+    const customRounds = [
+      {
+        msg: "Choose our first pokemon...",
+        options: [
+          { name: "Option 1", url: "your-image-1a.png", id: 1 },
+          { name: "Option 2", url: "your-image-1b.png", id: 2 },
+          { name: "Option 3", url: "your-image-1c.png", id: 3 }
+        ]
+      },
+      {
+        msg: "Choose our second pokemon...",
+        options: [
+          { name: "Option 4", url: "your-image-2a.png", id: 4 },
+          { name: "Option 5", url: "your-image-2b.png", id: 5 },
+          { name: "Option 6", url: "your-image-2c.png", id: 6 }
+        ]
+      },
+      {
+        msg: "Choose our final partner...",
+        options: [
+          { name: "Option 7", url: "your-image-3a.png", id: 7 },
+          { name: "Option 8", url: "your-image-3b.png", id: 8 },
+          { name: "Option 9", url: "your-image-3c.png", id: 9 }
+        ]
+      }
+    ];
+
+    function startAdventure() {
+      document.getElementById('start-btn').style.display = 'none';
+      loadRound();
+    }
+
+    function loadRound() {
+      if (round >= maxRounds) {
+        showQuestion();
+        return;
+      }
+      document.getElementById('display-text').innerText = customRounds[round].msg;
+      const container = document.getElementById('choices-container');
+      container.style.display = 'flex';
+      container.innerHTML = ''; 
+
+      customRounds[round].options.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'poke-card';
+        card.id = `choice-${item.id}`;
+        card.innerHTML = `<img src="${item.url}" onerror="this.src='https://via.placeholder.com/140?text=IMG'"><div class="poke-name">${item.name}</div>`;
+        card.onclick = () => handleChoice(item);
+        container.appendChild(card);
+      });
+    }
+
+    function handleChoice(item) {
+      if (round === 2 && item.id !== 9) {
+        document.getElementById('display-text').innerText = wrongMessages[Math.min(wrongTries++, wrongMessages.length-1)];
+        
+        // Option 9 grows
+        option9Scale += 0.8; 
+        const opt9 = document.getElementById('choice-9');
+        opt9.style.transform = `scale(${option9Scale})`;
+        
+        // Ensure it looks more "menacing" as it grows
+        opt9.style.boxShadow = `0 0 ${wrongTries * 10}px rgba(255, 111, 97, 0.7)`;
+        return;
+      }
+      round++;
+      loadRound();
+    }
+
+    function showQuestion() {
+      document.getElementById('choices-container').style.display = 'none';
+      document.getElementById('display-text').innerText = "Will you be my Valentine? ❤️";
+      document.getElementById('final-choice-btns').style.display = 'flex';
+    }
+
+    function moveNoButton() {
+      const noBtn = document.getElementById('no-button');
+      const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
+      const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
+      noBtn.style.position = 'fixed';
+      noBtn.style.left = x + 'px';
+      noBtn.style.top = y + 'px';
+    }
+
+    function celebrate() {
+      document.getElementById('final-choice-btns').style.display = 'none';
+      document.getElementById('display-text').innerText = "I love you! Date on February 14! 🎆";
+      const finalImg = "your-image-3c.jpg"; // Path to Option 9
+      document.getElementById('final-partner-container').innerHTML = `<img id="final-partner-img" src="${finalImg}">`;
+    }
+  </script>
+
+</body>
+</html>
