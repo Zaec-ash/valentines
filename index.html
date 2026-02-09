@@ -32,7 +32,6 @@
       max-width: 900px;
     }
 
-    /* CRITICAL FIX: The Dialogue Box now has the highest Z-index */
     .quote {
       width: 100%;
       max-width: 650px;
@@ -50,8 +49,7 @@
       align-items: center;
       justify-content: center;
       position: relative;
-      z-index: 1000; /* Always on top of the growing image */
-      pointer-events: auto;
+      z-index: 1000;
     }
 
     .choices-grid {
@@ -62,7 +60,7 @@
       flex-wrap: wrap;
       width: 100%;
       position: relative;
-      z-index: 10; /* Lower than the quote box */
+      z-index: 10;
     }
 
     .poke-card {
@@ -76,7 +74,6 @@
       position: relative;
     }
 
-    /* Option 9 grows but stays behind the text box */
     #choice-9 {
       z-index: 500; 
       transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
@@ -116,9 +113,36 @@
       width: 180px;
       height: 180px;
       margin-bottom: 20px;
+      margin-top: 15px;
       border-radius: 20px;
       border: 6px solid #3b4cca;
       object-fit: cover;
+    }
+
+    .date-details {
+      margin-top: 15px;
+      text-align: left;
+      display: inline-block;
+      font-size: 0.6rem;
+      line-height: 2.2;
+    }
+
+    .date-details span { color: #ff6f61; }
+
+    /* Heart Animation Styles */
+    .heart {
+      position: fixed;
+      top: -10vh;
+      font-size: 2rem;
+      user-select: none;
+      z-index: 999;
+      animation: fall linear forwards;
+    }
+
+    @keyframes fall {
+      to {
+        transform: translateY(110vh) rotate(360deg);
+      }
     }
   </style>
 </head>
@@ -126,8 +150,9 @@
 
   <div class="container">
     <div id="text-box" class="quote">
-      <div id="final-partner-container"></div>
       <div id="display-text">“Every love story is special, but ours could be legendary.”</div>
+      
+      <div id="final-partner-container"></div>
       
       <div id="final-choice-btns" class="btn-container">
         <button class="yes-btn" onclick="celebrate()">YES</button>
@@ -209,14 +234,12 @@
     function handleChoice(item) {
       if (round === 2 && item.id !== 9) {
         document.getElementById('display-text').innerText = wrongMessages[Math.min(wrongTries++, wrongMessages.length-1)];
-        
-        // Option 9 grows
         option9Scale += 0.8; 
         const opt9 = document.getElementById('choice-9');
-        opt9.style.transform = `scale(${option9Scale})`;
-        
-        // Ensure it looks more "menacing" as it grows
-        opt9.style.boxShadow = `0 0 ${wrongTries * 10}px rgba(255, 111, 97, 0.7)`;
+        if(opt9) {
+            opt9.style.transform = `scale(${option9Scale})`;
+            opt9.style.boxShadow = `0 0 ${wrongTries * 10}px rgba(255, 111, 97, 0.7)`;
+        }
         return;
       }
       round++;
@@ -225,7 +248,7 @@
 
     function showQuestion() {
       document.getElementById('choices-container').style.display = 'none';
-      document.getElementById('display-text').innerText = "YIPPIE!Will you be my Valentines then? ❤️";
+      document.getElementById('display-text').innerText = "YIPPIE! Will you be my Valentine then? ❤️";
       document.getElementById('final-choice-btns').style.display = 'flex';
     }
 
@@ -238,15 +261,42 @@
       noBtn.style.top = y + 'px';
     }
 
+    function createHeart() {
+      const heart = document.createElement('div');
+      heart.classList.add('heart');
+      heart.innerHTML = ['❤️', '💖', '💘', '💝', '🌸'][Math.floor(Math.random() * 5)];
+      heart.style.left = Math.random() * 100 + 'vw';
+      heart.style.animationDuration = Math.random() * 2 + 3 + 's';
+      heart.style.opacity = Math.random();
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 5000);
+    }
+
     function celebrate() {
       document.getElementById('final-choice-btns').style.display = 'none';
-      document.getElementById('display-text').innerText = "I love you! Date on February 14! 🎆";
-      const finalImg = "your-image-3c.jpg"; // Path to Option 9
-      document.getElementById('final-partner-container').innerHTML = `<img id="final-partner-img" src="${finalImg}">`;
+      document.getElementById('display-text').innerHTML = "I LOVE YOU! 🎆<br>Our Legendary Date:";
+
+      const dateCard = `
+        <div class="date-details">
+          <span>WHEN:</span> February 14, 2026<br>
+          <span>WHERE:</span> Nook Kitchenn<br>
+          <span>COLOR THEME:</span> Red <br>
+          See You There!!
+        </div>
+      `;
+
+      const finalImg = "your-image-3c.jpg"; 
+      const container = document.getElementById('final-partner-container');
+      
+      container.innerHTML = `
+        <img id="final-partner-img" src="${finalImg}" onerror="this.src='https://via.placeholder.com/180?text=Captured!'">
+        <br>
+        ${dateCard}
+      `;
+
+      // Start the Heart Rain
+      setInterval(createHeart, 300);
     }
   </script>
-
 </body>
-
 </html>
-
